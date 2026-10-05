@@ -34,6 +34,10 @@ should become a question.
   is attached, **read it** (download the image and open it) — it shows what the feature is
   meant to look like and do, and makes the rest of the review sharper. It's nice-to-have,
   not required; if there's none, note that a visual would have helped and move on.
+- If the compound-engineering plugin is available, run `/ce-explain` on the PR's changes
+  to generate an explanation of what the PR does, and include it with the report so I get
+  a walkthrough alongside the findings. If the skill isn't available, skip this silently —
+  it's optional.
 
 ## 2. Review dimensions
 
@@ -55,6 +59,20 @@ and where useful suggest the fix.
   demand it. If the whole project ignores it, don't fight the codebase; raise it to the
   author as a **nitpick** rather than a blocker.
 - Clear naming, small focused units, no obvious duplication.
+
+**Types & type safety**
+- New/changed code should be typed as fully as the language allows. In typed-optional
+  languages (Python type hints, TypeScript), missing annotations on new public
+  functions/methods are a real finding, not a nitpick.
+- Types should make sense, not just exist. Flag `Any`/`any`, `object`, overly-wide unions,
+  and unsafe casts/`# type: ignore` used to silence the checker instead of fixing the type.
+- Plain dicts passed around as implicit structures are a smell. If a dict has known keys,
+  it should be a real type — a dataclass, TypedDict, Pydantic model, or NamedTuple in
+  Python; an interface or type alias in TypeScript — so the shape is checkable and
+  discoverable. Same for tuples with positional meaning.
+- Magic strings (and numbers) used as discriminators — statuses, kinds, modes, event
+  names — should be enums, `Literal` types, or named constants, defined once. Flag string
+  comparisons against inline literals that appear in more than one place.
 
 **Tests**
 - New/changed behavior should be tested. Missing tests on real logic is a blocker.
@@ -84,21 +102,29 @@ Start with a 2–3 line summary: what the PR does, whether it matches its stated
 your overall call (approve / approve-with-comments / request-changes). Then the grouped
 findings. If nothing is wrong in a dimension, say so briefly rather than padding.
 
-## 4. Posting to GitHub
+## 4. Posting the review (only on my explicit say-so)
 
-Only on my explicit say-so — the review is visible to the author and the team.
+Posting is visible to the author and the team, so only do it when I explicitly ask. When
+you do post:
 
-When I ask you to post:
-
-- **Inline comments, not one big comment.** Anchor each finding to its exact file and
-  line as a review comment (`POST /repos/{owner}/{repo}/pulls/{n}/reviews` via `gh api`,
-  with a `comments` array of `{path, line, side: "RIGHT", body}`). The review body itself
-  carries only the verdict and a one-line summary.
+- **Every finding goes as an inline comment on the relevant line(s)** of the diff. Post
+  them all in a single review (one API call), not as separate one-off comments:
+  `gh api repos/{owner}/{repo}/pulls/<pr>/reviews` with the `event` field and a
+  `comments` array of `{path, line, side: "RIGHT", body}`.
+- **Pick the review event from the findings:**
+  - Any **blocking** finding → `REQUEST_CHANGES`.
+  - Only should-fix/nitpicks → `COMMENT`.
+  - Nothing worth flagging → `APPROVE`.
+- **No summary body.** Don't write "This PR is solid, but I found some items" or any
+  other overall verdict prose — the inline comments and the review state say everything.
+  Leave the review `body` empty.
+- The only exception: a finding that genuinely has no line to attach to (e.g. a missing
+  test file, a cross-cutting architecture concern). Put just that finding in the review
+  body — stated directly, no framing fluff around it.
 - **Straight to the point.** Cut the "reviewed and fine" padding, the methodology
   narration, and anything the author doesn't need to act. No praise or compliments
-  anywhere in the review — no "nice work overall", no "good call on X" openers. The
-  review body points at what needs attention and nothing else. Each inline comment:
-  what's wrong, why, suggested fix.
+  anywhere in the review — no "nice work overall", no "good call on X" openers. Each
+  inline comment: what's wrong, why, suggested fix.
 - **Write like a colleague, not a bot.** No severity prefixes (**Should fix:** /
   Nitpick:) and no rigid template — severity grouping is for my report, not for GitHub.
   Each comment should read as a natural remark from a teammate: state the problem
