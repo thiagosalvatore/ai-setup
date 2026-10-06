@@ -1,9 +1,10 @@
 ---
 name: pr-review
 description: >-
-  Review a coworker's pull request the way I do — code organization/architecture, test
-  coverage, logic vs stated intent, and performance. Use when I ask to review a PR, a
-  pull request, "review this PR", or give a PR number/URL to look over.
+  Review a coworker's pull request the way I do — code organization and adherence to the
+  codebase's own architecture/conventions, test coverage, logic vs stated intent, and
+  performance. Use when I ask to review a PR, a pull request, "review this PR", or give a
+  PR number/URL to look over.
 ---
 
 # PR review
@@ -108,8 +109,8 @@ you do post:
 
 - **Every finding goes as an inline comment on the relevant line(s)** of the diff. Post
   them all in a single review (one API call), not as separate one-off comments:
-  `gh api repos/{owner}/{repo}/pulls/<pr>/reviews` with the `comments` array and the
-  `event` field.
+  `gh api repos/{owner}/{repo}/pulls/<pr>/reviews` with the `event` field and a
+  `comments` array of `{path, line, side: "RIGHT", body}`.
 - **Pick the review event from the findings:**
   - Any **blocking** finding → `REQUEST_CHANGES`.
   - Only should-fix/nitpicks → `COMMENT`.
@@ -120,3 +121,18 @@ you do post:
 - The only exception: a finding that genuinely has no line to attach to (e.g. a missing
   test file, a cross-cutting architecture concern). Put just that finding in the review
   body — stated directly, no framing fluff around it.
+- **Straight to the point.** Cut the "reviewed and fine" padding, the methodology
+  narration, and anything the author doesn't need to act. No praise or compliments
+  anywhere in the review — no "nice work overall", no "good call on X" openers. Each
+  inline comment: what's wrong, why, suggested fix.
+- **Write like a colleague, not a bot.** No severity prefixes (**Should fix:** /
+  Nitpick:) and no rigid template — severity grouping is for my report, not for GitHub.
+  Each comment should read as a natural remark from a teammate: state the problem
+  conversationally, include the repro or reasoning where it helps, and end with a
+  concrete suggestion for how to fix it. Small style points can be softened ("tiny one:
+  …"); real bugs deserve a repro sketch. Vary the phrasing between comments so the
+  review doesn't read as generated.
+- **Verify line numbers against the PR head commit before posting** (fetch the file at
+  the head SHA and grep for the anchor) — diff offsets are easy to get wrong, and a
+  submitted review **cannot be deleted** via the API, only body-edited or dismissed. Get
+  it right the first time.

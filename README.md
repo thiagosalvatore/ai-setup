@@ -8,7 +8,7 @@ My personal, reusable AI configuration — a single source of truth for the codi
 ```
 ai-setup/
 ├── CLAUDE.md          # my personal coding standards (merged into ~/.claude/CLAUDE.md)
-├── install.sh         # installs CLAUDE.md + skills globally into ~/.claude
+├── install.sh         # installs CLAUDE.md + skills globally into ~/.claude and ~/.codex
 ├── skills/            # reusable Claude Code skills
 │   ├── README.md      # how skills are structured + authoring guide
 │   ├── _template/     # starter skill — copy and rename (not installed)
@@ -38,15 +38,16 @@ What it does:
    Your existing global content (gstack, RTK, etc.) is left untouched — only the block
    between the markers is refreshed.
 
-2. **Symlinks each skill** in `skills/` into `~/.claude/skills/`, so they're available to
-   every project. `_template/` is skipped. A real (non-symlink) directory already present
-   in `~/.claude/skills/` is left alone and reported.
+2. **Symlinks each skill** in `skills/` into `~/.claude/skills/` and `~/.codex/skills/`,
+   so they're available to every project in both Claude Code and Codex. `_template/` is
+   skipped. A real (non-symlink) directory already present in a destination is left alone
+   and reported.
 
 The script is **idempotent** — re-run it after editing `CLAUDE.md` or adding a skill and it
 updates the managed block and re-links skills without touching anything else. Because
 skills are symlinked, edits in this repo take effect immediately with no re-run needed.
 
-Install to a different location with `CLAUDE_HOME=/path ./install.sh`.
+Install to different locations with `CLAUDE_HOME=/path CODEX_HOME=/path ./install.sh`.
 
 ## Keeping it up to date
 
